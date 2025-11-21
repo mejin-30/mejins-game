@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青铜密符 - 中国神话解密游戏</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0F172A',      // 深蓝主色
+                        secondary: '#7F1D1D',    // 暗红辅助色
+                        accent: '#F59E0B',       // 金色强调色
+                        dark: '#1E293B',         // 深色背景
+                        light: '#F8FAFC',        // 浅色文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Noto Serif SC', 'serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { textShadow: '0 0 5px #F59E0B, 0 0 10px #F59E0B' },
+                            '100%': { textShadow: '0 0 10px #F59E0B, 0 0 20px #F59E0B, 0 0 30px #F59E0B' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            }
+            .text-glow {
+                text-shadow: 0 0 10px #F59E0B;
+            }
+            .bg-texture {
+                background-image: url('https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+            }
+            .scrollbar-hidden::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hidden {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .keyword {
+                @apply text-accent cursor-pointer hover:underline;
+                text-decoration: underline;
+                text-decoration-style: dotted;
+                text-decoration-thickness: 1px;
+                text-underline-offset: 2px;
+            }
+            .keyword:hover {
+                @apply text-glow;
+                text-decoration-style: solid;
+            }
+            .clue-card {
+                @apply bg-dark bg-opacity-80 border border-accent border-opacity-30 rounded-lg p-4 mb-4 transform transition-all duration-300;
+            }
+            .clue-card:hover {
+                @apply shadow-lg shadow-accent shadow-opacity-20 transform -translate-y-1;
+            }
+            .search-result {
+                @apply absolute z-10 w-full bg-dark bg-opacity-95 border border-accent border-opacity-50 rounded-lg p-4 mt-2 max-h-96 overflow-y-auto scrollbar-hidden;
+            }
+            .puzzle-container {
+                @apply bg-dark bg-opacity-90 border border-accent border-opacity-30 rounded-lg p-6;
+            }
+            .puzzle-input {
+                @apply bg-primary border border-accent border-opacity-50 rounded px-4 py-2 text-light focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50;
+            }
+            .btn {
+                @apply bg-accent bg-opacity-20 hover:bg-opacity-30 text-accent border border-accent border-opacity-50 rounded px-4 py-2 transition-all duration-300;
+            }
+            .btn:hover {
+                @apply bg-opacity-40 shadow-md shadow-accent shadow-opacity-20;
+            }
+            .btn:active {
+                @apply transform scale-95;
+            }
+            .progress-bar {
+                @apply h-2 bg-primary rounded-full overflow-hidden;
+            }
+            .progress-fill {
+                @apply h-full bg-accent transition-all duration-500;
+            }
+        }
+    </style>
+</head>
+<body class="bg-primary text-light min-h-screen">
+    <!-- 背景纹理 -->
+    <div class="fixed inset-0 bg-texture opacity-10 z-0"></div>
+    
+    <!-- 主容器 -->
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+        <!-- 顶部导航 -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <h1 class="text-3xl md:text-4xl font-serif font-bold text-accent animate-glow">青铜密符</h1>
+                <span class="ml-4 text-sm md:text-base bg-accent bg-opacity-20 text-accent px-3 py-1 rounded-full">中国神话解密游戏</span>
+            </div>
+            
+            <!-- 返回按钮和进度条 -->
+            <div class="hidden md:flex items-center space-x-4">
+                <button id="back-btn" class="btn text-sm hidden">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回
+                </button>
+                
+                <div class="flex flex-col items-end">
+                    <span class="text-sm text-accent mb-1">游戏进度</span>
+                    <div class="w-48 progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 移动端菜单按钮 -->
+            <button id="mobile-menu-btn" class="md:hidden text-accent focus:outline-none">
+                <i class="fa fa-bars text-2xl"></i>
+            </button>
+        </header>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-dark bg-opacity-95 border border-accent border-opacity-30 rounded-lg p-4 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-accent">游戏进度</span>
+                <span id="mobile-progress-text">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="mobile-progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="mt-4 flex justify-around">
+                <button id="mobile-back-btn" class="btn text-sm hidden">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回
+                </button>
+                <button id="mobile-clues-btn" class="btn">
+                    <i class="fa fa-list-ul mr-1"></i> 线索
+                </button>
+                <button id="mobile-hint-btn" class="btn">
+                    <i class="fa fa-lightbulb-o mr-1"></i> 提示
+                </button>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- 左侧故事文本区 -->
+            <div class="lg:w-1/2 bg-dark bg-opacity-80 border border-accent border-opacity-30 rounded-lg p-6 h-[calc(100vh-12rem)] overflow-y-auto scrollbar-hidden">
+                <div id="story-content" class="prose prose-invert max-w-none">
+                    <!-- 故事内容将通过JavaScript动态插入 -->
+                </div>
+            </div>
+            
+            <!-- 右侧搜索和线索区 -->
+            <div class="lg:w-1/2 flex flex-col gap-6">
+                <!-- 搜索区 -->
+                <div class="bg-dark bg-opacity-80 border border-accent border-opacity-30 rounded-lg p-6">
+                    <h2 class="text-xl font-serif text-accent mb-4">
+                        <i class="fa fa-search mr-2"></i>关键词搜索
+                    </h2>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="search-input" 
+                            class="puzzle-input w-full" 
+                            placeholder="输入关键词搜索线索..."
+                            autocomplete="off"
+                        >
+                        <button id="search-btn" class="btn absolute right-1 top-1 h-10 w-10 p-0 flex items-center justify-center">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        <div id="search-results" class="search-result hidden"></div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>提示：在故事文本中寻找<span class="text-accent">金色下划线</span>的关键词</p>
+                    </div>
+                </div>
+                
+                <!-- 线索墙 -->
+                <div class="bg-dark bg-opacity-80 border border-accent border-opacity-30 rounded-lg p-6 flex-grow h-[calc(50vh-12rem)] overflow-y-auto scrollbar-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-serif text-accent">
+                            <i class="fa fa-list-ul mr-2"></i>线索墙
+                        </h2>
+                        <button id="hint-btn" class="btn text-sm">
+                            <i class="fa fa-lightbulb-o mr-1"></i> 提示
+                        </button>
+                    </div>
+                    <div id="clues-container" class="space-y-4">
+                        <!-- 线索将通过JavaScript动态插入 -->
+                        <div class="text-gray-400 italic text-center py-8">
+                            <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                            <p>搜索关键词获取线索</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 谜题弹窗 -->
+    <div id="puzzle-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 hidden">
+        <div class="bg-dark border border-accent border-opacity-50 rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="puzzle-title" class="text-xl font-serif text-accent"></h2>
+                <button id="close-puzzle" class="text-gray-400 hover:text-white focus:outline-none">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="puzzle-content" class="puzzle-container mb-4">
+                <!-- 谜题内容将通过JavaScript动态插入 -->
+            </div>
+            <div class="flex justify-between">
+                <button id="puzzle-hint" class="btn text-sm">
+                    <i class="fa fa-lightbulb-o mr-1"></i> 提示
+                </button>
+                <div class="flex items-center gap-2">
+                    <input 
+                        type="text" 
+                        id="puzzle-answer" 
+                        class="puzzle-input" 
+                        placeholder="输入答案..."
+                    >
+                    <button id="submit-answer" class="btn">
+                        <i class="fa fa-check mr-1"></i> 提交
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 结局弹窗 -->
+    <div id="ending-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 hidden">
+        <div class="bg-dark border border-accent border-opacity-50 rounded-lg p-6 max-w-3xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="ending-title" class="text-2xl font-serif text-accent"></h2>
+                <button id="close-ending" class="text-gray-400 hover:text-white focus:outline-none">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="ending-content" class="prose prose-invert max-w-none mb-6">
+                <!-- 结局内容将通过JavaScript动态插入 -->
+            </div>
+            <div class="text-center">
+                <button id="restart-game" class="btn">
+                    <i class="fa fa-refresh mr-1"></i> 重新开始
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示弹窗 -->
+    <div id="hint-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="bg-dark border border-accent border-opacity-50 rounded-lg p-6 max-w-lg w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-serif text-accent">
+                    <i class="fa fa-lightbulb-o mr-2"></i>提示
+                </h2>
+                <button id="close-hint" class="text-gray-400 hover:text-white focus:outline-none">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="hint-content" class="mb-4">
+                <!-- 提示内容将通过JavaScript动态插入 -->
+            </div>
+            <div class="text-right">
+                <button id="next-hint" class="btn text-sm">
+                    下一条提示 <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 游戏数据
+        const gameData = {
+            currentNode: 'start',
+            visitedNodes: [],
+            nodeHistory: [],
+            collectedClues: [],
+            solvedPuzzles: [],
+            currentHintIndex: 0,
+            progress: 0,
+            
+            // 故事节点
+            storyNodes: {
+                'start': {
+                    title: '第一章：考古学家的失踪',
+                    text: `
+                        <p class="mb-4">2025年秋，你收到一封来自考古学家陈教授的邮件，邮件内容简短而神秘：</p>
+                        <blockquote class="border-l-4 border-accent pl-4 italic mb-4">
+                            "我在青铜峡遗址发现了一件非凡的文物，可能与上古神话中的<span class="keyword" data-keyword="青龙封印">青龙封印</span>有关。这件文物似乎蕴藏着某种能量，我担心它会带来危险。如果你收到这封邮件，说明我可能已经失踪。请务必找到<span class="keyword" data-keyword="青铜密符">青铜密符</span>，阻止灾难发生。"
+                        </blockquote>
+                        <p class="mb-4">邮件附件是一张模糊的照片，照片上是一块刻有奇怪符号的青铜碎片。你认出这是陈教授一直在研究的<span class="keyword" data-keyword="夏朝遗迹">夏朝遗迹</span>的一部分。</p>
+                        <p class="mb-4">你决定前往青铜峡遗址一探究竟。当你到达遗址时，发现考古营地已经被遗弃，陈教授的帐篷里一片狼藉，地上散落着几张照片和笔记。</p>
+                        <p class="mb-4">你捡起一张照片，照片上是一个完整的青铜器物，上面刻有与邮件附件中相同的符号。照片背面写着一行小字："<span class="keyword" data-keyword="昆仑之墟">昆仑之墟</span>，<span class="keyword" data-keyword="赤水之阳">赤水之阳</span>"。</p>
+                        <p>另一张照片上是陈教授与一位陌生男子的合影，背景是一座古老的祭坛。你注意到陌生男子脖子上挂着一个奇怪的吊坠，吊坠的形状与青铜碎片上的符号相似。</p>
+                    `,
+                    keywords: ['青龙封印', '青铜密符', '夏朝遗迹', '昆仑之墟', '赤水之阳'],
+                    puzzles: [],
+                    nextNode: 'node1'
+                },
+                
+                'node1': {
+                    title: '第二章：神秘的符号',
+                    text: `
+                        <p class="mb-4">你仔细研究陈教授的笔记，发现其中一页画着一个复杂的符号图案，旁边写着："<span class="keyword" data-keyword="八卦方位">八卦方位</span>，<span class="keyword" data-keyword="天干地支">天干地支</span>，<span class="keyword" data-keyword="二十八星宿">二十八星宿</span>"。</p>
+                        <p class="mb-4">笔记中还提到一个名字：<span class="keyword" data-keyword="李教授">李教授</span>，他是陈教授的同事，也是一位神话学专家。你决定联系李教授，希望能从他那里得到更多信息。</p>
+                        <p class="mb-4">李教授告诉你，陈教授曾向他提起过<span class="keyword" data-keyword="青龙封印">青龙封印</span>的传说。根据古籍记载，青龙封印是上古时期用来镇压洪水的神器，由大禹铸造。封印分为四块，分别对应四个方位，只有集齐四块封印，才能释放其中的力量。</p>
+                        <p class="mb-4">李教授还提到，陈教授在失踪前曾去过一趟<span class="keyword" data-keyword="三星堆博物馆">三星堆博物馆</span>，那里收藏着一件与青龙封印有关的文物。你决定立即前往三星堆博物馆。</p>
+                        <p>在博物馆里，你找到了那件文物——一个青铜面具，面具的额头上刻着与青铜碎片上相同的符号。你仔细观察面具，发现它的眼睛部分可以打开，里面藏着一张纸条。</p>
+                    `,
+                    keywords: ['八卦方位', '天干地支', '二十八星宿', '李教授', '青龙封印', '三星堆博物馆'],
+                    puzzles: ['puzzle1'],
+                    nextNode: 'node2'
+                },
+                
+                'node2': {
+                    title: '第三章：密码与谜题',
+                    text: `
+                        <p class="mb-4">纸条上写着一串奇怪的字符："<span class="keyword" data-keyword="LFDXW RQOG">LFDXW RQOG</span>"。你认出这是一种密码，但不确定具体是哪种。</p>
+                        <p class="mb-4">你回想起陈教授笔记中提到的<span class="keyword" data-keyword="凯撒密码">凯撒密码</span>，决定尝试使用这种方法解密。经过几次尝试，你成功解开了密码，得到了一个地址："<span class="keyword" data-keyword="青羊宫">青羊宫</span>，<span class="keyword" data-keyword="三清殿">三清殿</span>，<span class="keyword" data-keyword="坤位">坤位</span>"。</p>
+                        <p class="mb-4">你立刻前往青羊宫，在三清殿的坤位找到了一块松动的地砖。地砖下面藏着一个小盒子，盒子上有一个密码锁，密码是一个四位数。</p>
+                        <p class="mb-4">盒子旁边放着一张纸条，上面写着："东方甲乙木，南方丙丁火，西方庚辛金，北方壬癸水。"你意识到这可能与<span class="keyword" data-keyword="五行相生相克">五行相生相克</span>有关。</p>
+                        <p>你需要解开这个四位数的密码，才能打开盒子。</p>
+                    `,
+                    keywords: ['LFDXW RQOG', '凯撒密码', '青羊宫', '三清殿', '坤位', '五行相生相克'],
+                    puzzles: ['puzzle2'],
+                    nextNode: 'node3'
+                },
+                
+                'node3': {
+                    title: '第四章：青龙的踪迹',
+                    text: `
+                        <p class="mb-4">你成功解开了密码，打开了盒子。盒子里装着第二块青铜密符，以及一张古老的地图。地图上标记着四个地点，分别对应四个方位，每个地点旁边都有一个符号。</p>
+                        <p class="mb-4">你认出其中一个符号与陈教授照片上的符号相同，地点标记为"<span class="keyword" data-keyword="龙门石窟">龙门石窟</span>"。你决定前往龙门石窟，寻找第三块青铜密符。</p>
+                        <p class="mb-4">在龙门石窟，你找到了一个隐藏的洞穴，洞穴的墙壁上刻满了龙的图案。洞穴的尽头有一个石台，石台上放着一个盒子，盒子上有一个机关，需要按照特定的顺序触摸龙的图案才能打开。</p>
+                        <p class="mb-4">你注意到龙的图案旁边刻着一些文字："角、亢、氐、房、心、尾、箕"。你想起这些是<span class="keyword" data-keyword="东方七宿">东方七宿</span>的名称，对应着青龙的七个部位。</p>
+                        <p>你需要按照正确的顺序触摸这些龙的图案，才能打开盒子，获取第三块青铜密符。</p>
+                    `,
+                    keywords: ['龙门石窟', '东方七宿'],
+                    puzzles: ['puzzle3'],
+                    nextNode: 'node4'
+                },
+                
+                'node4': {
+                    title: '第五章：幕后黑手',
+                    text: `
+                        <p class="mb-4">你成功打开了盒子，获取了第三块青铜密符。就在这时，一个声音突然响起："你果然很聪明，不过你还是晚了一步。"</p>
+                        <p class="mb-4">你转身一看，是一个陌生男子，他脖子上挂着的吊坠与陈教授照片上的那个一模一样。"我是<span class="keyword" data-keyword="张教授">张教授</span>，陈教授的同事。"他说道，"我一直在研究青龙封印，没想到陈教授竟然抢先找到了线索。"</p>
+                        <p class="mb-4">张教授告诉你，他和陈教授原本是合作伙伴，但在研究过程中产生了分歧。张教授认为应该利用青龙封印的力量来改变世界，而陈教授则担心这种力量会带来灾难。</p>
+                        <p class="mb-4">"陈教授太天真了，"张教授冷笑道，"他以为他能阻止我？我已经找到了第四块青铜密符，现在我只需要你的三块，就能集齐所有封印，释放青龙的力量。"</p>
+                        <p class="mb-4">你意识到张教授就是绑架陈教授的幕后黑手。你必须阻止他，否则后果不堪设想。</p>
+                        <p>张教授向你发起了挑战："如果你能解开我设置的谜题，我就告诉你陈教授的下落。否则，你就乖乖地把青铜密符交给我。"</p>
+                    `,
+                    keywords: ['张教授'],
+                    puzzles: ['puzzle4'],
+                    nextNode: 'node5'
+                },
+                
+                'node5': {
+                    title: '第六章：最终谜题',
+                    text: `
+                        <p class="mb-4">张教授设置的谜题是一个复杂的密码锁，需要输入一个八位数的密码。密码锁的旁边有一些提示：</p>
+                        <ul class="list-disc pl-6 mb-4">
+                            <li>第一位：<span class="keyword" data-keyword="河图洛书">河图洛书</span>中的天数</li>
+                            <li>第二位：<span class="keyword" data-keyword="八卦">八卦</span>的数量</li>
+                            <li>第三位：<span class="keyword" data-keyword="五行">五行</span>的数量</li>
+                            <li>第四位：<span class="keyword" data-keyword="天干">天干</span>的数量</li>
+                            <li>第五位：<span class="keyword" data-keyword="地支">地支</span>的数量</li>
+                            <li>第六位：<span class="keyword" data-keyword="四象">四象</span>的数量</li>
+                            <li>第七位：<span class="keyword" data-keyword="三才">三才</span>的数量</li>
+                            <li>第八位：<span class="keyword" data-keyword="两仪">两仪</span>的数量</li>
+                        </ul>
+                        <p class="mb-4">你需要根据这些提示，找出正确的八位数密码。</p>
+                        <p class="mb-4">如果你能解开这个谜题，就能找到陈教授的下落，并阻止张教授的阴谋。否则，世界将面临巨大的灾难。</p>
+                        <p>时间紧迫，你必须尽快解开这个谜题。</p>
+                    `,
+                    keywords: ['河图洛书', '八卦', '五行', '天干', '地支', '四象', '三才', '两仪'],
+                    puzzles: ['puzzle5'],
+                    nextNode: 'ending1'
+                },
+                
+                'ending1': {
+                    title: '结局一：青龙觉醒',
+                    text: `
+                        <p class="mb-4">你成功解开了最终谜题，密码是"58510123"。密码锁打开了，里面是一张地图，标记着陈教授的位置。</p>
+                        <p class="mb-4">你按照地图的指示，找到了一个隐藏的洞穴。洞穴的尽头，陈教授被绑在一个石柱上，旁边是一个巨大的祭坛，祭坛上放着第四块青铜密符。</p>
+                        <p class="mb-4">你解开了陈教授的绳索，他告诉你，张教授已经前往<span class="keyword" data-keyword="黄河源头">黄河源头</span>，准备在那里释放青龙的力量。</p>
+                        <p class="mb-4">你们立刻前往黄河源头，发现张教授已经集齐了四块青铜密符，正在进行一个神秘的仪式。祭坛周围的河水开始沸腾，天空中出现了一个巨大的漩涡。</p>
+                        <p class="mb-4">"太晚了！"张教授狂笑道，"青龙即将觉醒，世界将迎来新的秩序！"</p>
+                        <p class="mb-4">就在这时，陈教授突然说道："不，你错了。青龙封印的真正力量不是毁灭，而是守护。只有当四块密符的持有者心意相通时，才能唤醒青龙的真正力量。"</p>
+                        <p class="mb-4">你和陈教授分别拿起两块青铜密符，心意相通。四块密符发出耀眼的光芒，融合在一起，形成了一条巨大的青龙。青龙盘旋在天空中，发出一声震天动地的咆哮。</p>
+                        <p class="mb-4">张教授惊恐地看着眼前的一切，他意识到自己犯了一个巨大的错误。青龙并没有按照他的意愿毁灭世界，而是化作一道光芒，修复了大地的创伤。</p>
+                        <p class="mb-4">灾难结束后，陈教授告诉你，青龙封印是上古时期人类与神灵之间的契约，它的力量可以保护世界免受灾难的侵袭。但如果落入错误的人手中，也可能带来毁灭。</p>
+                        <p>你决定将青铜密符交给陈教授保管，让他继续研究如何正确地使用这种力量。你知道，这个世界上还有许多未知的秘密等待着你去探索。</p>
+                    `,
+                    keywords: ['黄河源头'],
+                    puzzles: [],
+                    nextNode: null
+                }
+            },
+            
+            // 关键词线索
+            clues: {
+                '青龙封印': {
+                    title: '青龙封印',
+                    description: '上古时期用来镇压洪水的神器，由大禹铸造。封印分为四块，分别对应四个方位，只有集齐四块封印，才能释放其中的力量。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青铜密符', '夏朝遗迹']
+                },
+                
+                '青铜密符': {
+                    title: '青铜密符',
+                    description: '青龙封印的组成部分，共有四块，每块上面都刻有不同的符号。集齐四块密符，可以释放青龙的力量。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青龙封印', '夏朝遗迹']
+                },
+                
+                '夏朝遗迹': {
+                    title: '夏朝遗迹',
+                    description: '中国历史上第一个朝代的遗迹，位于青铜峡附近。陈教授在这里发现了与青龙封印有关的线索。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青龙封印', '青铜密符']
+                },
+                
+                '昆仑之墟': {
+                    title: '昆仑之墟',
+                    description: '中国古代神话中的神山，传说是天帝的下都。根据古籍记载，青龙封印的一块碎片可能藏在这里。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['赤水之阳']
+                },
+                
+                '赤水之阳': {
+                    title: '赤水之阳',
+                    description: '中国古代神话中的河流，位于昆仑山的南面。根据古籍记载，青龙封印的一块碎片可能藏在这里。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['昆仑之墟']
+                },
+                
+                '八卦方位': {
+                    title: '八卦方位',
+                    description: '八卦是中国古代哲学中的重要概念，包括乾、坤、震、巽、坎、离、艮、兑八个方位。每个方位都有其对应的符号和含义。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['天干地支', '二十八星宿']
+                },
+                
+                '天干地支': {
+                    title: '天干地支',
+                    description: '天干地支是中国古代的一种纪年法，包括十天干（甲、乙、丙、丁、戊、己、庚、辛、壬、癸）和十二地支（子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥）。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['八卦方位', '二十八星宿']
+                },
+                
+                '二十八星宿': {
+                    title: '二十八星宿',
+                    description: '二十八星宿是中国古代天文学中的重要概念，将黄道附近的星空分为二十八个区域，每个区域称为一宿。二十八星宿分为四组，每组七个星宿，分别对应四个方位和四种神兽。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['八卦方位', '天干地支']
+                },
+                
+                '李教授': {
+                    title: '李教授',
+                    description: '陈教授的同事，神话学专家。他对青龙封印的传说有深入的研究，可以提供有关青龙封印的重要信息。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青龙封印']
+                },
+                
+                '三星堆博物馆': {
+                    title: '三星堆博物馆',
+                    description: '位于四川省广汉市，收藏着大量三星堆文化的文物。其中一件青铜面具上刻有与青龙封印有关的符号。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青龙封印']
+                },
+                
+                'LFDXW RQOG': {
+                    title: '神秘字符',
+                    description: '一串加密的字符，可能是一个地址或密码。需要使用适当的密码学方法解密。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['凯撒密码']
+                },
+                
+                '凯撒密码': {
+                    title: '凯撒密码',
+                    description: '一种简单的替换密码，通过将字母按照一定的位数偏移来实现加密。例如，如果偏移量为3，那么A将变成D，B将变成E，以此类推。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['LFDXW RQOG']
+                },
+                
+                '青羊宫': {
+                    title: '青羊宫',
+                    description: '位于四川省成都市，是中国著名的道教宫观。三清殿的坤位藏有与青龙封印有关的线索。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['三清殿', '坤位']
+                },
+                
+                '三清殿': {
+                    title: '三清殿',
+                    description: '青羊宫中的主要建筑之一，供奉着道教的三清尊神。坤位藏有与青龙封印有关的线索。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青羊宫', '坤位']
+                },
+                
+                '坤位': {
+                    title: '坤位',
+                    description: '八卦中的一个方位，代表西南方向。在青羊宫的三清殿中，坤位藏有与青龙封印有关的线索。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['青羊宫', '三清殿']
+                },
+                
+                '五行相生相克': {
+                    title: '五行相生相克',
+                    description: '五行是中国古代哲学中的重要概念，包括金、木、水、火、土五种元素。五行之间存在相生相克的关系：相生（金生水、水生木、木生火、火生土、土生金）和相克（金克木、木克土、土克水、水克火、火克金）。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '龙门石窟': {
+                    title: '龙门石窟',
+                    description: '位于河南省洛阳市，是中国著名的佛教艺术宝库。其中一个隐藏的洞穴中藏有第三块青铜密符。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['东方七宿']
+                },
+                
+                '东方七宿': {
+                    title: '东方七宿',
+                    description: '二十八星宿中的东方七宿，包括角、亢、氐、房、心、尾、箕七个星宿，对应着青龙的七个部位。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: ['龙门石窟']
+                },
+                
+                '张教授': {
+                    title: '张教授',
+                    description: '陈教授的同事，也是研究青龙封印的学者。他认为应该利用青龙封印的力量来改变世界，为此不惜绑架陈教授，试图独占青铜密符。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '河图洛书': {
+                    title: '河图洛书',
+                    description: '中国古代的两幅神秘图案，传说是伏羲氏根据黄河中的龙马和洛水中的神龟背上的图案绘制而成。河图洛书中蕴含着深奥的数理关系，其中天数为五。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '八卦': {
+                    title: '八卦',
+                    description: '中国古代哲学中的重要概念，包括乾、坤、震、巽、坎、离、艮、兑八个卦象。八卦的数量为八。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '五行': {
+                    title: '五行',
+                    description: '中国古代哲学中的重要概念，包括金、木、水、火、土五种元素。五行的数量为五。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '天干': {
+                    title: '天干',
+                    description: '中国古代的一种纪年法，包括甲、乙、丙、丁、戊、己、庚、辛、壬、癸十个天干。天干的数量为十。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '地支': {
+                    title: '地支',
+                    description: '中国古代的一种纪年法，包括子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥十二个地支。地支的数量为十二。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '四象': {
+                    title: '四象',
+                    description: '中国古代天文学中的重要概念，包括东方青龙、南方朱雀、西方白虎、北方玄武四种神兽。四象的数量为四。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '三才': {
+                    title: '三才',
+                    description: '中国古代哲学中的重要概念，包括天、地、人三个方面。三才的数量为三。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '两仪': {
+                    title: '两仪',
+                    description: '中国古代哲学中的重要概念，包括阴、阳两个方面。两仪的数量为二。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                },
+                
+                '黄河源头': {
+                    title: '黄河源头',
+                    description: '黄河的发源地，位于青海省玉树藏族自治州。张教授计划在这里释放青龙的力量。',
+                    image: 'https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e8f608ec89394768917bfdbdcf9d4c8d~tplv-a9rns2rl98-image.image?rcl=202511211020461E9441182D252C309D9B&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1766283706&x-signature=J%2BpKrtFT9Ntx2wbG84UvcPzligM%3D',
+                    relatedKeywords: []
+                }
+            },
+            
+            // 谜题
+            puzzles: {
+                'puzzle1': {
+                    title: '青铜面具谜题',
+                    description: '青铜面具的眼睛部分可以打开，里面藏着一张纸条。纸条上写着一串奇怪的字符："LFDXW RQOG"。你需要解开这个密码，才能知道下一步的线索。',
+                    type: 'caesar',
+                    difficulty: 2,
+                    hint1: '这是一种简单的替换密码，通过将字母按照一定的位数偏移来实现加密。',
+                    hint2: '尝试使用凯撒密码，偏移量为3。',
+                    hint3: '将每个字母向前移动3位。例如，D变成A，E变成B，以此类推。',
+                    answer: 'ICALL YOU',
+                    solution: '通过凯撒密码（偏移量为3）解密，得到"ICALL YOU"，即"我打电话给你"。',
+                    reward: '你解开了密码，得到了一个电话号码。拨打这个号码，你听到了陈教授的留言，他告诉你他在三星堆博物馆发现了一些重要线索。'
+                },
+                
+                'puzzle2': {
+                    title: '五行密码',
+                    description: '盒子上有一个密码锁，密码是一个四位数。盒子旁边放着一张纸条，上面写着："东方甲乙木，南方丙丁火，西方庚辛金，北方壬癸水。"你需要解开这个四位数的密码，才能打开盒子。',
+                    type: 'logic',
+                    difficulty: 3,
+                    hint1: '纸条上提到的"东方甲乙木，南方丙丁火，西方庚辛金，北方壬癸水"与五行有关。',
+                    hint2: '五行包括金、木、水、火、土五种元素，每种元素都有其对应的方位和天干。',
+                    hint3: '密码是每种元素对应的天干数量。例如，木对应的天干是甲和乙，数量为2。',
+                    answer: '2222',
+                    solution: '根据纸条上的提示，东方甲乙木（2个天干），南方丙丁火（2个天干），西方庚辛金（2个天干），北方壬癸水（2个天干）。因此，密码是2222。',
+                    reward: '你成功打开了盒子，里面装着第二块青铜密符，以及一张古老的地图。地图上标记着四个地点，分别对应四个方位，每个地点旁边都有一个符号。'
+                },
+                
+                'puzzle3': {
+                    title: '东方七宿',
+                    description: '洞穴的尽头有一个石台，石台上放着一个盒子，盒子上有一个机关，需要按照特定的顺序触摸龙的图案才能打开。龙的图案旁边刻着一些文字："角、亢、氐、房、心、尾、箕"。你需要按照正确的顺序触摸这些龙的图案，才能打开盒子。',
+                    type: 'sequence',
+                    difficulty: 4,
+                    hint1: '这些文字是东方七宿的名称，对应着青龙的七个部位。',
+                    hint2: '东方七宿的顺序是角、亢、氐、房、心、尾、箕。',
+                    hint3: '按照从龙头到龙尾的顺序触摸这些图案。',
+                    answer: '角亢氐房心尾箕',
+                    solution: '按照东方七宿的顺序（角、亢、氐、房、心、尾、箕）触摸龙的图案，即可打开盒子。',
+                    reward: '你成功打开了盒子，获取了第三块青铜密符。就在这时，一个声音突然响起："你果然很聪明，不过你还是晚了一步。"'
+                },
+                
+                'puzzle4': {
+                    title: '张教授的挑战',
+                    description: '张教授向你发起了挑战："如果你能解开我设置的谜题，我就告诉你陈教授的下落。否则，你就乖乖地把青铜密符交给我。"谜题是一个摩斯密码：".... . .-.. .-.. --- / .-- --- .-. .-.. -.."。',
+                    type: 'morse',
+                    difficulty: 3,
+                    hint1: '这是一种通过点和划来表示字母和数字的密码。',
+                    hint2: '摩斯密码中，每个字母由点和划组成，字母之间用空格分隔，单词之间用斜杠分隔。',
+                    hint3: '尝试使用摩斯密码对照表来解密。',
+                    answer: 'HELLO WORLD',
+                    solution: '通过摩斯密码解密，得到"HELLO WORLD"，即"你好，世界"。',
+                    reward: '张教授对你的能力感到惊讶，他告诉你陈教授被关押在一个隐藏的洞穴中，并给了你一个谜题，解开这个谜题就能找到洞穴的位置。'
+                },
+                
+                'puzzle5': {
+                    title: '最终谜题',
+                    description: '张教授设置的谜题是一个复杂的密码锁，需要输入一个八位数的密码。密码锁的旁边有一些提示：第一位：河图洛书中的天数；第二位：八卦的数量；第三位：五行的数量；第四位：天干的数量；第五位：地支的数量；第六位：四象的数量；第七位：三才的数量；第八位：两仪的数量。',
+                    type: 'logic',
+                    difficulty: 5,
+                    hint1: '河图洛书中的天数为五。',
+                    hint2: '八卦的数量为八，五行的数量为五，天干的数量为十，地支的数量为十二，四象的数量为四，三才的数量为三，两仪的数量为二。',
+                    hint3: '将这些数字组合起来，得到密码。',
+                    answer: '58510123',
+                    solution: '根据提示，密码是：河图洛书中的天数（5）、八卦的数量（8）、五行的数量（5）、天干的数量（10）、地支的数量（12）、四象的数量（4）、三才的数量（3）、两仪的数量（2）。但需要注意的是，每个位置只能输入一位数字，因此需要取每个数字的个位数。因此，密码是58510123。',
+                    reward: '你成功解开了最终谜题，密码是"58510123"。密码锁打开了，里面是一张地图，标记着陈教授的位置。'
+                }
+            },
+            
+            // 提示
+            hints: [
+                '在故事文本中寻找金色下划线的关键词，点击或搜索这些关键词可以获取线索。',
+                '有些关键词需要组合使用才能获取更多信息。',
+                '注意观察关键词之间的关联性，它们可能会引导你找到新的线索。',
+                '如果你遇到困难，可以点击右上角的"提示"按钮获取帮助。',
+                '解开谜题需要仔细阅读线索，并运用你的逻辑思维能力。',
+                '有些谜题需要结合中国古代文化知识才能解开。',
+                '注意收集所有的青铜密符，它们是解开最终谜题的关键。',
+                '张教授可能在撒谎，你需要判断他说的话是否可信。',
+                '最终谜题的答案与中国古代哲学中的一些基本概念有关。',
+                '青龙封印的真正力量不是毁灭，而是守护。'
+            ]
+        };
+        
+        // DOM 元素
+        const storyContent = document.getElementById('story-content');
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResults = document.getElementById('search-results');
+        const cluesContainer = document.getElementById('clues-container');
+        const puzzleModal = document.getElementById('puzzle-modal');
+        const puzzleTitle = document.getElementById('puzzle-title');
+        const puzzleContent = document.getElementById('puzzle-content');
+        const puzzleAnswer = document.getElementById('puzzle-answer');
+        const submitAnswer = document.getElementById('submit-answer');
+        const closePuzzle = document.getElementById('close-puzzle');
+        const puzzleHint = document.getElementById('puzzle-hint');
+        const endingModal = document.getElementById('ending-modal');
+        const endingTitle = document.getElementById('ending-title');
+        const endingContent = document.getElementById('ending-content');
+        const closeEnding = document.getElementById('close-ending');
+        const restartGame = document.getElementById('restart-game');
+        const hintModal = document.getElementById('hint-modal');
+        const hintContent = document.getElementById('hint-content');
+        const closeHint = document.getElementById('close-hint');
+        const hintBtn = document.getElementById('hint-btn');
+        const mobileHintBtn = document.getElementById('mobile-hint-btn');
+        const nextHint = document.getElementById('next-hint');
+        const progressFill = document.getElementById('progress-fill');
+        const mobileProgressFill = document.getElementById('mobile-progress-fill');
+        const mobileProgressText = document.getElementById('mobile-progress-text');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileCluesBtn = document.getElementById('mobile-clues-btn');
+        const backBtn = document.getElementById('back-btn');
+        const mobileBackBtn = document.getElementById('mobile-back-btn');
+        
+        // 初始化游戏
+        function initGame() {
+            // 加载初始故事节点
+            loadStoryNode(gameData.currentNode);
+            
+            // 添加事件监听器
+            searchBtn.addEventListener('click', searchKeyword);
+            searchInput.addEventListener('input', showSearchSuggestions);
+            submitAnswer.addEventListener('click', checkAnswer);
+            closePuzzle.addEventListener('click', () => puzzleModal.classList.add('hidden'));
+            closeEnding.addEventListener('click', () => endingModal.classList.add('hidden'));
+            restartGame.addEventListener('click', resetGame);
+            hintBtn.addEventListener('click', showHint);
+            mobileHintBtn.addEventListener('click', showHint);
+            nextHint.addEventListener('click', showNextHint);
+            closeHint.addEventListener('click', () => hintModal.classList.add('hidden'));
+            mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            mobileCluesBtn.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                document.querySelector('.lg\\:w-1\\/2.flex.flex-col.gap-6').scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // 返回按钮事件
+            backBtn.addEventListener('click', goBack);
+            mobileBackBtn.addEventListener('click', goBack);
+            
+            // 点击其他区域关闭搜索结果
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchBtn.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+            
+            // 按回车键搜索
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchKeyword();
+                }
+            });
+            
+            // 更新进度条
+            updateProgress();
+        }
+        
+        // 加载故事节点
+        function loadStoryNode(nodeId) {
+            const node = gameData.storyNodes[nodeId];
+            
+            if (!node) return;
+            
+            // 保存当前节点到历史记录
+            if (gameData.currentNode !== nodeId) {
+                gameData.nodeHistory.push(gameData.currentNode);
+            }
+            
+            // 更新当前节点
+            gameData.currentNode = nodeId;
+            
+            // 添加到已访问节点
+            if (!gameData.visitedNodes.includes(nodeId)) {
+                gameData.visitedNodes.push(nodeId);
+            }
+            
+            // 更新故事内容
+            storyContent.innerHTML = `
+                <h2 class="text-2xl font-serif text-accent mb-4">${node.title}</h2>
+                <div>${node.text}</div>
+            `;
+            
+            // 添加关键词点击事件
+            document.querySelectorAll('.keyword').forEach(el => {
+                el.addEventListener('click', () => {
+                    const keyword = el.getAttribute('data-keyword');
+                    searchInput.value = keyword;
+                    searchKeyword();
+                });
+            });
+            
+            // 检查是否有谜题
+            if (node.puzzles && node.puzzles.length > 0) {
+                const unsolvedPuzzles = node.puzzles.filter(puzzle => !gameData.solvedPuzzles.includes(puzzle));
+                
+                if (unsolvedPuzzles.length > 0) {
+                    setTimeout(() => {
+                        showPuzzle(unsolvedPuzzles[0]);
+                    }, 1000);
+                }
+            }
+            
+            // 检查是否是结局
+            if (nodeId.includes('ending')) {
+                setTimeout(() => {
+                    showEnding(nodeId);
+                }, 2000);
+            }
+            
+            // 更新进度条
+            updateProgress();
+            
+            // 更新返回按钮状态
+            updateBackButtonStatus();
+        }
+        
+        // 搜索关键词
+        function searchKeyword() {
+            const keyword = searchInput.value.trim();
+            
+            if (!keyword) return;
+            
+            // 隐藏搜索结果
+            searchResults.classList.add('hidden');
+            
+            // 检查是否是有效的关键词
+            if (gameData.clues[keyword]) {
+                // 添加到已收集线索
+                if (!gameData.collectedClues.includes(keyword)) {
+                    gameData.collectedClues.push(keyword);
+                }
+                
+                // 显示线索
+                showClue(keyword);
+                
+                // 清空搜索框
+                searchInput.value = '';
+                
+                // 更新进度条
+                updateProgress();
+            } else {
+                // 显示错误消息
+                searchResults.innerHTML = `
+                    <div class="text-red-500 text-center py-2">
+                        <i class="fa fa-times-circle mr-1"></i> 未找到相关线索
+                    </div>
+                `;
+                searchResults.classList.remove('hidden');
+                
+                // 3秒后隐藏错误消息
+                setTimeout(() => {
+                    searchResults.classList.add('hidden');
+                }, 3000);
+            }
+        }
+        
+        // 显示搜索建议
+        function showSearchSuggestions() {
+            const query = searchInput.value.toLowerCase().trim();
+            
+            if (!query) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+            
+            // 获取匹配的关键词
+            const matchedKeywords = [];
+            
+            for (const nodeId in gameData.storyNodes) {
+                const node = gameData.storyNodes[nodeId];
+                
+                if (node.keywords) {
+                    node.keywords.forEach(keyword => {
+                        if (keyword.toLowerCase().includes(query) && !gameData.collectedClues.includes(keyword)) {
+                            matchedKeywords.push(keyword);
+                        }
+                    });
+                }
+            }
+            
+            // 显示搜索建议
+            if (matchedKeywords.length > 0) {
+                searchResults.innerHTML = `
+                    <ul class="space-y-2">
+                        ${matchedKeywords.map(keyword => `
+                            <li class="hover:bg-dark hover:bg-opacity-50 p-2 rounded cursor-pointer">
+                                ${keyword}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                
+                // 添加点击事件
+                searchResults.querySelectorAll('li').forEach(li => {
+                    li.addEventListener('click', () => {
+                        searchInput.value = li.textContent;
+                        searchKeyword();
+                    });
+                });
+                
+                searchResults.classList.remove('hidden');
+            } else {
+                searchResults.classList.add('hidden');
+            }
+        }
+        
+        // 显示线索
+        function showClue(keyword) {
+            const clue = gameData.clues[keyword];
+            
+            if (!clue) return;
+            
+            // 清空线索墙
+            cluesContainer.innerHTML = '';
+            
+            if (gameData.collectedClues.length > 0) {
+                gameData.collectedClues.forEach(collectedKeyword => {
+                    const collectedClue = gameData.clues[collectedKeyword];
+                    
+                    if (collectedClue) {
+                        const collectedClueCard = document.createElement('div');
+                        collectedClueCard.className = 'clue-card';
+                        collectedClueCard.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-serif text-accent mb-2">${collectedClue.title}</h3>
+                                <button class="text-gray-400 hover:text-white focus:outline-none remove-clue">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+                            <p class="mb-4">${collectedClue.description}</p>
+                            ${collectedClue.image ? `<img src="${collectedClue.image}" alt="${collectedClue.title}" class="w-full h-40 object-cover rounded-lg mb-4">` : ''}
+                            ${collectedClue.relatedKeywords && collectedClue.relatedKeywords.length > 0 ? `
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-400 mb-2">相关关键词：</p>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${collectedClue.relatedKeywords.map(relatedKeyword => `
+                                            <span class="bg-accent bg-opacity-20 text-accent text-xs px-2 py-1 rounded cursor-pointer related-keyword">
+                                                ${relatedKeyword}
+                                            </span>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        `;
+                        
+                        cluesContainer.appendChild(collectedClueCard);
+                    }
+                });
+            } else {
+                cluesContainer.innerHTML = `
+                    <div class="text-gray-400 italic text-center py-8">
+                        <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                        <p>搜索关键词获取线索</p>
+                    </div>
+                `;
+            }
+            
+            // 添加删除线索事件
+            document.querySelectorAll('.remove-clue').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const clueCard = e.target.closest('.clue-card');
+                    const clueTitle = clueCard.querySelector('h3').textContent;
+                    
+                    // 从已收集线索中移除
+                    gameData.collectedClues = gameData.collectedClues.filter(keyword => gameData.clues[keyword].title !== clueTitle);
+                    
+                    // 重新显示线索墙
+                    clueCard.remove();
+                    
+                    if (gameData.collectedClues.length === 0) {
+                        cluesContainer.innerHTML = `
+                            <div class="text-gray-400 italic text-center py-8">
+                                <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                                <p>搜索关键词获取线索</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // 更新进度条
+                    updateProgress();
+                });
+            });
+            
+            // 添加相关关键词点击事件
+            document.querySelectorAll('.related-keyword').forEach(span => {
+                span.addEventListener('click', () => {
+                    const relatedKeyword = span.textContent;
+                    searchInput.value = relatedKeyword;
+                    searchKeyword();
+                });
+            });
+        }
+        
+        // 显示谜题
+        function showPuzzle(puzzleId) {
+            const puzzle = gameData.puzzles[puzzleId];
+            
+            if (!puzzle) return;
+            
+            // 更新谜题内容
+            puzzleTitle.textContent = puzzle.title;
+            puzzleContent.innerHTML = `
+                <p class="mb-4">${puzzle.description}</p>
+                <div class="mt-6">
+                    <p class="text-sm text-gray-400 mb-2">难度：${'★'.repeat(puzzle.difficulty)}${'☆'.repeat(5 - puzzle.difficulty)}</p>
+                </div>
+            `;
+            
+            // 清空答案输入框
+            puzzleAnswer.value = '';
+            
+            // 显示谜题弹窗
+            puzzleModal.classList.remove('hidden');
+            
+            // 存储当前谜题ID
+            puzzleModal.dataset.puzzleId = puzzleId;
+        }
+        
+        // 检查答案
+        function checkAnswer() {
+            const puzzleId = puzzleModal.dataset.puzzleId;
+            const puzzle = gameData.puzzles[puzzleId];
+            
+            if (!puzzle) return;
+            
+            const answer = puzzleAnswer.value.trim().toUpperCase();
+            
+            if (answer === puzzle.answer.toUpperCase()) {
+                // 答案正确
+                gameData.solvedPuzzles.push(puzzleId);
+                
+                // 显示奖励
+                alert(puzzle.reward);
+                
+                // 关闭谜题弹窗
+                puzzleModal.classList.add('hidden');
+                
+                // 更新进度条
+                updateProgress();
+                
+                // 加载下一个故事节点
+                const currentNode = gameData.currentNode;
+                const nextNode = gameData.storyNodes[currentNode].nextNode;
+                
+                if (nextNode) {
+                    loadStoryNode(nextNode);
+                }
+            } else {
+                // 答案错误
+                alert('答案不正确，请再试一次。');
+            }
+        }
+        
+        // 显示结局
+        function showEnding(endingId) {
+            const ending = gameData.storyNodes[endingId];
+            
+            if (!ending) return;
+            
+            // 更新结局内容
+            endingTitle.textContent = ending.title;
+            endingContent.innerHTML = ending.text;
+            
+            // 显示结局弹窗
+            endingModal.classList.remove('hidden');
+        }
+        
+        // 显示提示
+        function showHint() {
+            // 显示当前提示
+            hintContent.textContent = gameData.hints[gameData.currentHintIndex];
+            
+            // 显示提示弹窗
+            hintModal.classList.remove('hidden');
+        }
+        
+        // 显示下一条提示
+        function showNextHint() {
+            // 更新提示索引
+            gameData.currentHintIndex = (gameData.currentHintIndex + 1) % gameData.hints.length;
+            
+            // 显示下一条提示
+            hintContent.textContent = gameData.hints[gameData.currentHintIndex];
+        }
+        
+        // 更新进度条
+        function updateProgress() {
+            const totalClues = Object.keys(gameData.clues).length;
+            const totalPuzzles = Object.keys(gameData.puzzles).length;
+            const totalNodes = Object.keys(gameData.storyNodes).length - 1; // 减去结局节点
+            
+            const collectedClues = gameData.collectedClues.length;
+            const solvedPuzzles = gameData.solvedPuzzles.length;
+            const visitedNodes = gameData.visitedNodes.length;
+            
+            // 计算进度百分比
+            const progress = Math.round((collectedClues / totalClues * 30) + (solvedPuzzles / totalPuzzles * 40) + (visitedNodes / totalNodes * 30));
+            
+            // 更新进度条
+            progressFill.style.width = `${progress}%`;
+            mobileProgressFill.style.width = `${progress}%`;
+            mobileProgressText.textContent = `${progress}%`;
+            
+            // 存储进度
+            gameData.progress = progress;
+        }
+        
+        // 返回上一个节点
+        function goBack() {
+            if (gameData.nodeHistory.length > 0) {
+                const prevNode = gameData.nodeHistory.pop();
+                loadStoryNode(prevNode);
+            }
+        }
+        
+        // 更新返回按钮状态
+        function updateBackButtonStatus() {
+            if (gameData.nodeHistory.length > 0) {
+                backBtn.classList.remove('hidden');
+                mobileBackBtn.classList.remove('hidden');
+            } else {
+                backBtn.classList.add('hidden');
+                mobileBackBtn.classList.add('hidden');
+            }
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            // 重置游戏数据
+            gameData.currentNode = 'start';
+            gameData.visitedNodes = [];
+            gameData.nodeHistory = [];
+            gameData.collectedClues = [];
+            gameData.solvedPuzzles = [];
+            gameData.currentHintIndex = 0;
+            gameData.progress = 0;
+            
+            // 更新进度条
+            progressFill.style.width = '0%';
+            mobileProgressFill.style.width = '0%';
+            mobileProgressText.textContent = '0%';
+            
+            // 清空线索墙
+            cluesContainer.innerHTML = `
+                <div class="text-gray-400 italic text-center py-8">
+                    <i class="fa fa-info-circle text-2xl mb-2 block"></i>
+                    <p>搜索关键词获取线索</p>
+                </div>
+            `;
+            
+            // 更新返回按钮状态
+            updateBackButtonStatus();
+            
+            // 关闭结局弹窗
+            endingModal.classList.add('hidden');
+            
+            // 加载初始故事节点
+            loadStoryNode(gameData.currentNode);
+        }
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
